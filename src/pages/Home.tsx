@@ -1,9 +1,8 @@
-import { useState } from "react";
+// import { useState } from "react";
 import { useAddBookMutation } from "../redux/api/libraryApi";
 
 // Book Type
 interface IBook {
-  id: string;
   title: string;
   author: string;
   genre: string;
@@ -14,11 +13,8 @@ interface IBook {
 }
 
 const Home = () => {
-
-
   const books: IBook[] = [
     {
-      id: "1",
       title: "The Hobbit",
       author: "J.R.R. Tolkien",
       genre: "Fantasy",
@@ -28,7 +24,6 @@ const Home = () => {
       available: true,
     },
     {
-      id: "2",
       title: "1984",
       author: "George Orwell",
       genre: "Dystopian",
@@ -39,56 +34,70 @@ const Home = () => {
     },
   ];
 
-//   const [addBook] = useAddBookMutation()
+    const [addBook, {isLoading}] = useAddBookMutation()
 
   // Form state
-  const [formData, setFormData] = useState({
-    title: "",
-    author: "",
-    genre: "",
-    isbn: "",
-    description: "",
-    copies: 0,
-  });
+  // const [formData, setFormData] = useState({
+  //   title: "",
+  //   author: "",
+  //   genre: "",
+  //   isbn: "",
+  //   description: "",
+  //   copies: 0,
+  // });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
+  // const handleChange = (
+  //   e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  // ) => {
+  //   const { name, value } = e.target;
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "copies" ? parseInt(value) : value,
-    }));
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     [name]: name === "copies" ? parseInt(value) : value,
+  //   }));
+  // };
+
+ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  const form = e.currentTarget;
+  const formData = new FormData(form);
+
+  const title = formData.get("title") as string;
+  const author = formData.get("author") as string;
+  const genre = formData.get("genre") as string;
+  const isbn = formData.get("isbn") as string;
+  const description = formData.get("description") as string;
+  const copies = parseInt(formData.get("copies") as string, 10) || 1;
+
+  const newBook: IBook = {
+    title,
+    author,
+    genre,
+    isbn,
+    description,
+    copies,
+    available: copies > 0,
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newBook: IBook = {
-      id: Date.now().toString(),
-      ...formData,
-      available: formData.copies > 0,
-    };
-    console.log("New Book:", newBook);
-    // Clear form
-    setFormData({
-      title: "",
-      author: "",
-      genre: "",
-      isbn: "",
-      description: "",
-      copies: 0,
-    });
-    // Close modal
-    (document.getElementById("my_modal_1") as HTMLDialogElement).close();
-  };
+  const res = await addBook(newBook);
+  console.log(res);
+
+  // Reset form
+  form.reset();
+
+  // Close modal
+  (document.getElementById("my_modal_1") as HTMLDialogElement).close();
+};
+
 
   return (
     <div className="p-6">
       <button
         className="btn btn-soft mb-6"
         onClick={() =>
-          (document.getElementById("my_modal_1") as HTMLDialogElement)?.showModal()
+          (
+            document.getElementById("my_modal_1") as HTMLDialogElement
+          )?.showModal()
         }
       >
         ➕ Add New Book
@@ -147,8 +156,6 @@ const Home = () => {
               name="title"
               placeholder="Title"
               className="input input-bordered w-full"
-              value={formData.title}
-              onChange={handleChange}
               required
             />
             <input
@@ -156,8 +163,6 @@ const Home = () => {
               name="author"
               placeholder="Author"
               className="input input-bordered w-full"
-              value={formData.author}
-              onChange={handleChange}
               required
             />
             <input
@@ -165,8 +170,6 @@ const Home = () => {
               name="genre"
               placeholder="Genre"
               className="input input-bordered w-full"
-              value={formData.genre}
-              onChange={handleChange}
               required
             />
             <input
@@ -174,27 +177,22 @@ const Home = () => {
               name="isbn"
               placeholder="ISBN"
               className="input input-bordered w-full"
-              value={formData.isbn}
-              onChange={handleChange}
               required
             />
             <textarea
               name="description"
               placeholder="Description"
               className="textarea textarea-bordered w-full"
-              value={formData.description}
-              onChange={handleChange}
             ></textarea>
             <input
               type="number"
               name="copies"
               placeholder="Copies"
               className="input input-bordered w-full"
-              value={formData.copies}
-              onChange={handleChange}
               min={0}
               required
             />
+
             <div className="modal-action">
               <button type="submit" className="btn btn-success">
                 Submit
@@ -203,7 +201,9 @@ const Home = () => {
                 type="button"
                 className="btn"
                 onClick={() =>
-                  (document.getElementById("my_modal_1") as HTMLDialogElement).close()
+                  (
+                    document.getElementById("my_modal_1") as HTMLDialogElement
+                  ).close()
                 }
               >
                 Cancel
